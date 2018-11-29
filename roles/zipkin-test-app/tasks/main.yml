@@ -1,0 +1,35 @@
+#- name: install python-apt
+#  shell: pip install python-apt
+#  become: yes
+
+- name: install java and maven
+  apt:
+    name: ['openjdk-8-jdk', 'maven']
+  become: yes
+
+- name: check is ziplin-sample-app sources already here
+  stat:
+    path: /opt/zipkin-sample-webapp/pom.xml
+  register: pom_xml
+
+- name: grab sample app
+  shell: git clone https://github.com/takezoe/zipkin-sample-webapp.git
+  args:
+    chdir: /opt
+  become: yes
+  when: pom_xml.stat.exists == False
+  register: source_download
+
+- name: patch pom.xml
+  blockinfile:
+    name: /opt/zipkin-sample-webapp/pom.xml
+    insertbefore: <dependencies>
+    block: |
+      <properties>
+      <maven.compiler.source>1.6</maven.compiler.source>
+      <maven.compiler.target>1.6</maven.compiler.target>
+      </properties>
+    marker: <!-- Ansible managed block -->
+  become: yes
+  when: source_download is not skipped
+
