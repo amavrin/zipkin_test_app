@@ -1,0 +1,3 @@
+- hosts: zipkin
+  roles:
+    - zipkin-test-app
